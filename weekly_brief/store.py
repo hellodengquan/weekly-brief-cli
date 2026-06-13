@@ -64,6 +64,17 @@ def delete_entry(entry_id: str, data_dir: Path) -> bool:
     if len(new_entries) == len(entries):
         return False
     save_entries(new_entries, data_dir)
+
+    groups = load_groups(data_dir)
+    groups_dirty = False
+    for group in groups:
+        new_group_entries = [e for e in group.entries if e.id != entry_id]
+        if len(new_group_entries) != len(group.entries):
+            group.entries = new_group_entries
+            groups_dirty = True
+    if groups_dirty:
+        save_groups(groups, data_dir)
+
     return True
 
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -13,6 +14,26 @@ from .renderer import render_markdown, export_markdown
 
 app = typer.Typer(help="周报素材整理器：收集、分组、输出 Markdown")
 console = Console()
+
+
+def _parse_date(value: str) -> datetime:
+    return datetime.strptime(value, "%Y-%m-%d")
+
+
+def _filter_by_date(entries, since: Optional[str], until: Optional[str]):
+    if since:
+        since_dt = _parse_date(since)
+        entries = [
+            e for e in entries
+            if datetime.strptime(e.created_at, "%Y-%m-%d %H:%M") >= since_dt
+        ]
+    if until:
+        until_dt = _parse_date(until)
+        entries = [
+            e for e in entries
+            if datetime.strptime(e.created_at, "%Y-%m-%d %H:%M") <= until_dt.replace(hour=23, minute=59)
+        ]
+    return entries
 
 
 def _resolve_dir(data_dir: Optional[str]) -> Path:
@@ -43,12 +64,15 @@ def add(
 @app.command(name="list")
 def list_entries(
     tag: Optional[str] = typer.Option(None, "--tag", "-t", help="按标签筛选"),
+    since: Optional[str] = typer.Option(None, "--since", help="起始日期（YYYY-MM-DD，含）"),
+    until: Optional[str] = typer.Option(None, "--until", help="结束日期（YYYY-MM-DD，含）"),
     data_dir: Optional[str] = typer.Option(None, "--dir", help="数据存储目录"),
 ):
     d = _resolve_dir(data_dir)
     entries = load_entries(d)
     if tag:
         entries = [e for e in entries if tag in e.tags]
+    entries = _filter_by_date(entries, since, until)
 
     if not entries:
         console.print("[yellow]暂无素材[/yellow]")
