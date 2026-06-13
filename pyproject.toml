@@ -1,0 +1,16 @@
+[project]
+name = "weekly-brief"
+version = "0.1.0"
+description = "周报素材整理器：收集、分组、输出 Markdown"
+requires-python = ">=3.10"
+dependencies = [
+    "typer>=0.12",
+    "rich>=13",
+]
+
+[project.scripts]
+weekly-brief = "weekly_brief.cli:app"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
